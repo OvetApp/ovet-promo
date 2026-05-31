@@ -103,7 +103,7 @@ html, body {
   border:1px solid var(--ovet-border);
   opacity:0; transition:opacity 0.2s;
 }
-.stage.controls-visible .controls, .stage.paused .controls { opacity:1; }
+.controls.is-visible { opacity:1; }
 .stage.idle { cursor:none; }
 .controls button {
   background:var(--ovet-primary); color:white; border:0;
@@ -1841,13 +1841,19 @@ progressBar.addEventListener('click', e => {
 });
 
 // Reveal controls on activity, auto-hide after a short idle (while playing).
+const controlsEl = document.querySelector('.controls');
 let hideTimer;
 function showControls() {
+  controlsEl.classList.add('is-visible');
   stage.classList.add('controls-visible');
   stage.classList.remove('idle');
   clearTimeout(hideTimer);
   hideTimer = setTimeout(() => {
-    if (playing) { stage.classList.remove('controls-visible'); stage.classList.add('idle'); }
+    if (playing) {
+      controlsEl.classList.remove('is-visible');
+      stage.classList.remove('controls-visible');
+      stage.classList.add('idle');
+    }
   }, 2600);
 }
 ['mousemove', 'mousedown', 'touchstart', 'keydown'].forEach(ev =>
