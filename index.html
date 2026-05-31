@@ -103,7 +103,8 @@ html, body {
   border:1px solid var(--ovet-border);
   opacity:0; transition:opacity 0.2s;
 }
-.stage:hover .controls, .stage.paused .controls { opacity:1; }
+.stage.controls-visible .controls, .stage.paused .controls { opacity:1; }
+.stage.idle { cursor:none; }
 .controls button {
   background:var(--ovet-primary); color:white; border:0;
   width:32px; height:32px; border-radius:50%;
@@ -1729,7 +1730,7 @@ function tick() {
   }) || (elapsed >= TOTAL ? scenes[scenes.length - 1] : null);
   setScene(active);
   progressFill.style.width = (elapsed / TOTAL * 100) + '%';
-  timeDisplay.textContent = `${format(elapsed)} / ${format(TOTAL)}`;
+  timeDisplay.textContent = `Scène ${currentSceneIndex() + 1}/${scenes.length} · ${format(elapsed)} / ${format(TOTAL)}`;
   requestAnimationFrame(tick);
 }
 
@@ -1806,6 +1807,36 @@ document.addEventListener('keydown', e => {
   if (e.code === 'ArrowLeft') { e.preventDefault(); prevBtn.click(); }
   if (e.code === 'ArrowRight') { e.preventDefault(); nextBtn.click(); }
 });
+
+// Scene boundary markers on the progress bar.
+const progressBar = document.getElementById('progressBar');
+scenes.forEach((s, i) => {
+  if (i === 0) return;
+  const tick = document.createElement('div');
+  tick.className = 'scene-tick';
+  tick.style.left = (parseFloat(s.dataset.start) / TOTAL * 100) + '%';
+  progressBar.appendChild(tick);
+});
+
+// Click anywhere on the progress bar to jump to that point.
+progressBar.addEventListener('click', e => {
+  const rect = progressBar.getBoundingClientRect();
+  seek(((e.clientX - rect.left) / rect.width) * TOTAL);
+});
+
+// Reveal controls on activity, auto-hide after a short idle (while playing).
+let hideTimer;
+function showControls() {
+  stage.classList.add('controls-visible');
+  stage.classList.remove('idle');
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => {
+    if (playing) { stage.classList.remove('controls-visible'); stage.classList.add('idle'); }
+  }, 2600);
+}
+['mousemove', 'mousedown', 'touchstart', 'keydown'].forEach(ev =>
+  document.addEventListener(ev, showControls, { passive: true }));
+showControls();
 
 const btnFr = document.getElementById('btn-fr');
 const btnEn = document.getElementById('btn-en');
