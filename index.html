@@ -1671,6 +1671,12 @@ body.en .t-en { display:initial; }
   <button id="restartBtn" title="Recommencer" style="background:var(--ovet-muted-fg);">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
   </button>
+  <button id="prevBtn" title="Scène précédente (←)">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="18,5 8,12 18,19"/><rect x="5" y="5" width="2.6" height="14"/></svg>
+  </button>
+  <button id="nextBtn" title="Scène suivante (→)">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="6,5 16,12 6,19"/><rect x="16.4" y="5" width="2.6" height="14"/></svg>
+  </button>
   <span class="time" id="timeDisplay">0:00 / 1:05</span>
 </div>
 
@@ -1682,6 +1688,8 @@ const progressFill = document.getElementById('progressFill');
 const timeDisplay = document.getElementById('timeDisplay');
 const playBtn = document.getElementById('playBtn');
 const restartBtn = document.getElementById('restartBtn');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
 
 let playing = true;
 let startTime = performance.now();
@@ -1756,10 +1764,47 @@ restartBtn.onclick = () => {
   updatePlayBtn();
 };
 
+// Jump playback to time t (seconds), replaying the target scene's intro animation.
+function seek(t) {
+  t = Math.max(0, Math.min(TOTAL, t));
+  elapsed = t;
+  pausedAt = t;
+  startTime = performance.now() - t * 1000;
+  if (t >= TOTAL) playing = false;
+  currentScene = null;
+  scenes.forEach(s => s.classList.remove('active'));
+  updatePlayBtn();
+}
+
+function currentSceneIndex() {
+  for (let i = 0; i < scenes.length; i++) {
+    const a = parseFloat(scenes[i].dataset.start);
+    const b = parseFloat(scenes[i].dataset.end);
+    if (elapsed >= a && elapsed < b) return i;
+  }
+  return elapsed >= TOTAL ? scenes.length - 1 : 0;
+}
+
+prevBtn.onclick = () => {
+  const i = currentSceneIndex();
+  const start = parseFloat(scenes[i].dataset.start);
+  // If we're more than 0.6s into the current scene, restart it; otherwise go to the previous one.
+  if (i === 0 || elapsed - start > 0.6) seek(start);
+  else seek(parseFloat(scenes[i - 1].dataset.start));
+};
+
+nextBtn.onclick = () => {
+  const i = currentSceneIndex();
+  if (i >= scenes.length - 1) seek(TOTAL);
+  else seek(parseFloat(scenes[i + 1].dataset.start));
+};
+
 document.addEventListener('keydown', e => {
   if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
   if (e.code === 'KeyR') { restartBtn.click(); }
   if (e.code === 'KeyF') { document.documentElement.requestFullscreen?.(); }
+  if (e.code === 'ArrowLeft') { e.preventDefault(); prevBtn.click(); }
+  if (e.code === 'ArrowRight') { e.preventDefault(); nextBtn.click(); }
 });
 
 const btnFr = document.getElementById('btn-fr');
