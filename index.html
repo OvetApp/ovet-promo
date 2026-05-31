@@ -115,10 +115,26 @@ html, body {
 .controls .time { color:var(--ovet-muted-fg); font-size:11px; font-weight:600;
   font-variant-numeric:tabular-nums; padding:0 6px; }
 .progress {
-  position:fixed; top:0; left:0; right:0; height:2px;
+  position:fixed; bottom:0; left:0; right:0; height:5px;
   background:var(--ovet-muted); z-index:99;
+  cursor:pointer; transition:height 0.15s ease;
 }
-.progress-fill { height:100%; background:var(--ovet-primary); width:0%; transition:width 0.1s linear; }
+.stage:hover .progress, .stage.controls-visible .progress { height:9px; }
+.progress-fill { height:100%; background:var(--ovet-primary); width:0%;
+  transition:width 0.1s linear; position:relative; }
+.progress-fill::after {
+  content:''; position:absolute; right:-5px; top:50%;
+  width:10px; height:10px; border-radius:50%;
+  background:var(--ovet-primary);
+  transform:translateY(-50%) scale(0); transition:transform 0.15s ease;
+  box-shadow:0 1px 4px rgba(0,0,0,0.25);
+}
+.stage:hover .progress-fill::after { transform:translateY(-50%) scale(1); }
+.scene-tick {
+  position:absolute; top:0; bottom:0; width:2px;
+  background:rgba(255,255,255,0.75); z-index:1;
+  transform:translateX(-1px); pointer-events:none;
+}
 
 /* ============ SCENE 1: LOGO ============ */
 .scene-logo {
@@ -878,7 +894,7 @@ body.en .t-en { display:initial; }
   <button id="btn-en">EN</button>
 </div>
 
-<div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+<div class="progress" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
 
 <div class="stage" id="stage">
 
